@@ -6,7 +6,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/coolbeevip/config-repo
+          uri: https://github.com/coolbeevip/itosi-microservices/tree/master/support/config-server/config-repo
   boot:
     admin:
       url: http://localhost:8762
