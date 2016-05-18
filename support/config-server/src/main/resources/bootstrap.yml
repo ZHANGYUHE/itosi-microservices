@@ -1,0 +1,8 @@
+---
+info: 集中的配置管理服务
+spring:
+  application:
+    name: 配置服务
+  cloud:
+    config:
+      uri: http://localhost:8888    
