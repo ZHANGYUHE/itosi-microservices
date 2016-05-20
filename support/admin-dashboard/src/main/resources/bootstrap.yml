@@ -1,0 +1,12 @@
+---
+info:
+  app:
+    name: 服务管理
+    description: 提供查看所有微服务的配置、JMX、日志、调用记录
+    version: 1.0
+spring:
+  application:
+    name: 服务管理
+endpoints:
+  health:
+    sensitive: false

@@ -1,5 +1,5 @@
 ---
-info: 集中的配置管理服务
+info: 集中的配置管理服务 SpringBoot Config Server
 spring:
   application:
     name: 配置服务
