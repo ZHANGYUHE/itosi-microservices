@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>在线文档转换</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<!-- css -->
+<link rel="stylesheet" href="/css/bootstrap.min.css" />
+
+<style type="text/css">
+	html {
+	    height: 100%;
+	}
+	
+	body {
+		height: 100%;
+	}
+</style>
+</head>
+<body>
+	<div id="documentViewer" style="height:100%"/>
+	<!-- js -->
+	<script src="/js/jquery-1.11.0.js"></script>
+	<script src="/js/plugins/flexpaper/flexpaper.js"></script>
+	<script type="text/javascript" th:inline="javascript"> 
+		$('#documentViewer').FlexPaperViewer( 
+		        { config : {
+		          SwfFile : [[${paperid}]],
+		          //IMGFiles : "Paper.pdf_{page}.png",
+		          //JSONFile : "Paper.pdf.js",
+		          //PDFFile : "Paper.pdf",
+		          Scale : 1,
+		          ZoomTransition : "easeOut",
+		          ZoomTime : 0.5,
+		          ZoomInterval : 0.1,
+		          FitPageOnLoad : false,
+		          FitWidthOnLoad : false,
+		          FullScreenAsMaxWindow : true,
+		          ProgressiveLoading : true,
+		          MinZoomSize : 0.2,
+		          MaxZoomSize : 5,
+		          SearchMatchAll : false,
+		          InitViewMode : 'Portrait',	               
+		          ViewModeToolsVisible : true,
+		          ZoomToolsVisible : true,
+		          NavToolsVisible : true,
+		          CursorToolsVisible : true,
+		          SearchToolsVisible : true,
+		                
+		          localeChain : "zh_CN"
+		}});
+    </script>
+</body>
+
+</html>

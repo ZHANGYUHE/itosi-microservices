@@ -1,0 +1,1 @@
+{  "name": "文档服务 REST API",  "version": "0.1.0",  "description": "文档服务",  "title": "文档服务 RESTAPI",  "url": "https://localhost:8482/api/v1/document",  "sampleUrl": false,  "apidoc": "0.2.0",  "generator": {    "name": "apidoc",    "time": "2016-05-17T13:21:15.853Z",    "url": "http://apidocjs.com",    "version": "0.16.1"  }}

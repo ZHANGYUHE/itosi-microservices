@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>文档服务</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<!-- css -->
+	<link rel="stylesheet" href="/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="/css/plugins/fileupload/jquery.fileupload.css" />
+	<link rel="stylesheet" href="/css/plugins/fileupload/jquery.fileupload-ui.css" />
+</head>
+<body>
+	<div class="container">
+		<div class="span12">
+			<span class="btn btn-success fileinput-button"> 
+				<i class="glyphicon glyphicon-plus"></i> 
+				<span>上传</span> 
+				<input id="fileupload" type="file" name="file" multiple="" />
+				<div id="progress">
+				    <div class="bar" style="width: 0%;"></div>
+				</div>				
+			</span>
+		</div>
+	</div>
+
+	<!-- js -->
+	<script src="/js/jquery-1.11.0.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script src="/js/json2.js"></script>
+	<script src="/js/plugins/jqueryui/jquery-ui.min.js"></script>
+	<script src="/js/plugins/fileupload/jquery.iframe-transport.js"></script>
+	<script src="/js/plugins/fileupload/jquery.fileupload.js"></script>
+
+	<script>
+		$(function() {
+			$('#fileupload').fileupload({
+				url: '/document/api/v1/zhanglei',
+				type: 'post',
+				dataType : 'json',			
+				done : function(e, data) {
+					$('<p/>').text(JSON.stringify(data.result)).appendTo(document.body);
+				},
+				progressall: function (e, data) {
+			        var progress = parseInt(data.loaded / data.total * 100, 10);
+			        $('#progress .bar').css(
+			            'width',
+			            progress + '%'
+			        );
+			    }				
+			});
+		});
+	</script>
+</body>
+
+</html>

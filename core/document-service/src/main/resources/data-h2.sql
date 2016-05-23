@@ -1,0 +1,2 @@
+insert into person (uuid,username,truename,password) values ('81bdcd1a28c948bb881cf3e9a31cd780','itosi','管理员','itosi');
+insert into person (uuid,username,truename,password) values ('81bdcd1a28c948bb881cf3e9a31cd782','test','测试用户','123456');
