@@ -1,5 +1,11 @@
 ---
-info: 集中的配置管理服务 SpringBoot Config Server
+info:
+  app:
+    name: 配置管理服务
+    description: 集中配置管理
+    version: 1.0
+server:
+  port: 8888    
 spring:
   application:
     name: 配置服务

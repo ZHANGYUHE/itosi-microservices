@@ -1,16 +1,22 @@
 ---
-server.port: 8888
-
 spring:
   cloud:
     config:
       server:
         git:
-          uri: https://github.com/coolbeevip/itosi-microservices/tree/master/support/config-server/config-repo
+          uri: https://github.com/xuminwlt/config-repo 
+          #          https://github.com/coolbeevip/itosi-microservices/tree/master/support/config-server/config-repo
   boot:
     admin:
       url: http://localhost:8762
 eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    metadataMap:
+      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
   client:
+    registerWithEureka: true
+    fetchRegistry: true
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://localhost:8761/eureka/            
+        

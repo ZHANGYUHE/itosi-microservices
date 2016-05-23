@@ -9,6 +9,7 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 
 @EnableConfigServer
 @SpringBootApplication
+@EnableDiscoveryClient
 public class ConfigServerApplication {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigServerApplication.class);
