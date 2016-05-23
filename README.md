@@ -27,7 +27,7 @@
   * [监控控制台 Monitor Dashboard](#monitor-server)
   * [管理控制台 Admin Dashboard](#admin-server)
 
-#### <a name="onfig-server"></a>配置服务
+#### <a name="config-server"></a>配置服务
 #### <a name="discovery-server"></a>输入采集
 #### <a name="monitor-server"></a>监控控制台
 #### <a name="admin-server"></a>管理控制台
