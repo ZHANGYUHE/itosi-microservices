@@ -26,13 +26,3 @@ create table if not exists document_search_log (
   searchparam  varchar(500),
   opdatetime  datetime default now()
 );
-
---用户表
-drop table if exists person;
-create table person ( 
-  uuid varchar(32) primary key,
-  username  varchar(100),
-  truename  varchar(500),
-  password  varchar(500),
-  opdatetime  datetime default now()
-);

@@ -1,0 +1,16 @@
+---
+info:
+  app:
+    name: 认证服务
+    description: OAuth2 认证服务
+    version: 1.0
+    
+spring:
+  application:
+    name: 认证服务
+      
+logging.level.root: WARN
+logging.level.org.springframework.security.oauth2: DEBUG
+
+logging.level.org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer: INFO
+logging.level.org.springframework.boot.context.embedded.undertow.UndertowEmbeddedServletContainer: INFO      

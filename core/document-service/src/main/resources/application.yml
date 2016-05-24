@@ -1,19 +1,19 @@
 ---
+security:
+  oauth2:
+    resource:
+      userInfoUri: https://localhost:9999/api/user
 multipart:
   max-file-size: 100MB
   max-request-size: 100MB
 spring:
   datasource:
     driverClassName: org.h2.Driver
-    url: jdbc:h2:/Users/zhanglei/Work/workspace-sts/cloud-docservice/database/maindb
+    url: jdbc:h2:document_db
     username: sa
     password: null
     platform: h2
     initialize: false
-  h2:
-    console:
-      path: /console/h2
-      enabled: true
   cloud:
     config:
       enabled: true
