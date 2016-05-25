@@ -14,6 +14,8 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.iplatform.microservices.core.documentservice.bean.DocumentDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentListResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogDO;
@@ -27,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/document")
 public class DocumentController {
+	private static final Log logger = LogFactory.getLog(DocumentController.class);
 	@Autowired
 	private DocumentMapper documentMapper;
 
@@ -48,7 +52,7 @@ public class DocumentController {
 	 * @apiGroup Document
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -F "file=@file.docx" -u test:123456 https://localhost:8482/api/v1/document"  
+	 * curl --insecure -H "Authorization: Bearer <access_token>" -F "file=@file.doc" https://localhost:8000/api/v1/document 
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 201 OK
@@ -79,9 +83,9 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/", method = RequestMethod.POST)
-	public ResponseEntity<?> create(@RequestParam(value = "file", required = false) MultipartFile file,
-			HttpServletRequest request,Principal principal) {
+	@RequestMapping(value = "", method = RequestMethod.POST)
+	public ResponseEntity<?> create(@RequestParam(value = "file", required = false) MultipartFile file,@RequestHeader(value="Authorization") String authorizationHeader,Principal principal) {
+
 		DocumentResponse documentrs = new DocumentResponse();
 		try {
 			String fileName = file.getOriginalFilename();
@@ -110,6 +114,7 @@ public class DocumentController {
 		} catch (Exception e) {
 			documentrs.setSuccess(Boolean.FALSE);
 			documentrs.setMessage(e.getMessage());
+			logger.error("",e);
 			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
 		}
 		
@@ -121,7 +126,7 @@ public class DocumentController {
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -o file.docx -u test:123456 https://localhost:8482/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download
+	 * curl --insecure -o file.docx -u test:123456 https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download
 	 */	
 	@RequestMapping(value = "/{fileid}/download", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> download(@PathVariable("fileid") String fileid,Principal principal)
@@ -149,7 +154,7 @@ public class DocumentController {
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -u test:123456 https://localhost:8482/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info
+	 * curl --insecure -i -u test:123456 https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -212,7 +217,7 @@ public class DocumentController {
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -X DELETE -u test:123456 https://localhost:8482/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782
+	 * curl --insecure -i -X DELETE -u test:123456 https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 204 NO CONTENT
@@ -258,7 +263,7 @@ public class DocumentController {
 	 * @apiGroup Document
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -u test:123456 https://localhost:8482/api/v1/document
+	 * curl --insecure -i -u test:123456 https://localhost:8000/api/v1/document
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -324,7 +329,7 @@ public class DocumentController {
 	 * @apiParam {String} q 搜索条件，多个条件用加号连接，每个条件采用模糊匹配，多个条件之间采用或的关系
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -u test:123456 https://localhost:8482/api/v1/document/search?q=亿阳+指南
+	 * curl --insecure -i -u test:123456 https://localhost:8000/api/v1/document/search?q=亿阳+指南
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK

@@ -1,4 +1,14 @@
----
+server:
+  port: 8000
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.jks
+    key-store-password: bocobomc
+    key-password: bocobomc
+    keyAlias: itosi 
+    trust-store: classpath:keystore.jks
+    trust-store-password: bocobomc
+    trust-store-type: jks
 security:
   oauth2:
     resource:
@@ -9,11 +19,11 @@ multipart:
 spring:
   datasource:
     driverClassName: org.h2.Driver
-    url: jdbc:h2:document_db
+    url: jdbc:h2:mem:memdb
     username: sa
     password: null
     platform: h2
-    initialize: false
+    initialize: true
   cloud:
     config:
       enabled: true

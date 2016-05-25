@@ -2,6 +2,7 @@ server:
   port: 9999
   contextPath: /api
   ssl:
+    enabled: true 
     key-store: classpath:keystore.jks
     key-store-password: bocobomc
     key-password: bocobomc
@@ -9,7 +10,7 @@ server:
 spring:
   datasource:
     dataSourceClassName: org.h2.jdbcx.JdbcDataSource
-    url: jdbc:h2:mem:spring_boot_oauth2
+    url: jdbc:h2:mem:memdb
     username: sa
     password: null
     platform: h2
