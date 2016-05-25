@@ -36,6 +36,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * @author zhanglei
+ * 文档管理，文档上传、下载、信息、在线预览、我的文档列表
+ */
 @RestController
 @RequestMapping("/api/v1/document")
 public class DocumentController {
@@ -48,11 +52,14 @@ public class DocumentController {
 
 
 	/**
-	 * @api {post} / 上传文档
+	 * @api {post} /document/ 上传文档
 	 * @apiGroup Document
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -H "Authorization: Bearer <access_token>" -F "file=@file.doc" https://localhost:8000/api/v1/document 
+	 * curl --insecure \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	-F "file=@file.doc" \
+	 * 	https://localhost:8000/api/v1/document/
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 201 OK
@@ -83,7 +90,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "", method = RequestMethod.POST)
+	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public ResponseEntity<?> create(@RequestParam(value = "file", required = false) MultipartFile file,@RequestHeader(value="Authorization") String authorizationHeader,Principal principal) {
 
 		DocumentResponse documentrs = new DocumentResponse();
@@ -121,12 +128,15 @@ public class DocumentController {
 	}
 
 	/**
-	 * @api {get} /:fileid/download 下载文档
+	 * @api {get} /document/:fileid/download 下载文档
 	 * @apiGroup Document
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -o file.docx -u test:123456 https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download
+	 * curl --insecure \
+	 * 	-o file.docx \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download
 	 */	
 	@RequestMapping(value = "/{fileid}/download", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> download(@PathVariable("fileid") String fileid,Principal principal)
@@ -149,12 +159,14 @@ public class DocumentController {
 	}
 
 	/**
-	 * @api {get} /:fileid/info 获取文档信息
+	 * @api {get} /document/:fileid/info 获取文档信息
 	 * @apiGroup Document
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -u test:123456 https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info
+	 * curl --insecure -i \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -212,12 +224,14 @@ public class DocumentController {
 	}
 
 	/**
-	 * @api {delete} /:fileid 删除文档
+	 * @api {delete} /document/:fileid 删除文档
 	 * @apiGroup Document
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -X DELETE -u test:123456 https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782
+	 * curl --insecure -i -X DELETE \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 204 NO CONTENT
@@ -259,11 +273,13 @@ public class DocumentController {
 	}
 
 	/**
-	 * @api {get} / 获取我的文档列表
+	 * @api {get} /document/ 获取我的文档列表
 	 * @apiGroup Document
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -u test:123456 https://localhost:8000/api/v1/document
+	 * curl --insecure -i \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/api/v1/document
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -311,7 +327,7 @@ public class DocumentController {
 	public ResponseEntity<?> list(Principal principal) {
 		DocumentListResponse documentrs = new DocumentListResponse();
 		try {
-			List<DocumentDO> documents = documentMapper.mylist(principal.getName());
+			List<DocumentDO> documents = documentMapper.mylistWithOutCatalog(principal.getName());
 			if (documents != null) {
 				documentrs.setDocuments(documents);
 			}
@@ -324,12 +340,14 @@ public class DocumentController {
 	}
 
 	/**
-	 * @api {get} /search 按文件名模糊搜索
+	 * @api {get} /document/search 按文件名模糊搜索
 	 * @apiGroup Document
 	 * @apiParam {String} q 搜索条件，多个条件用加号连接，每个条件采用模糊匹配，多个条件之间采用或的关系
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -u test:123456 https://localhost:8000/api/v1/document/search?q=亿阳+指南
+	 * curl --insecure -i \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/api/v1/document/search?q=亿阳+指南
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK

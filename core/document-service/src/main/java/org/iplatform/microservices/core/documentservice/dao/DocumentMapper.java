@@ -20,7 +20,13 @@ public interface DocumentMapper {
 	List<DocumentDO> list();
 
 	@Select("select * from document where author=#{author}")
-	List<DocumentDO> mylist(@Param("author") String author);
+	List<DocumentDO> mylistWithOutCatalog(@Param("author") String author);
+	
+	@Select("select * from document where author=#{author} and catalog_id is null")
+	List<DocumentDO> mylistWithRootCatalog(@Param("author") String author);	
+	
+	@Select("select * from document where author=#{author} and catalog_id=#{catalog_id}")
+	List<DocumentDO> mylistWithCatalog(@Param("author") String author,@Param("catalog_id") String catalog_id);		
 
 	@Select("<script>select * from document where author=#{author} and <foreach item='file_name' index='index' collection='file_names' open='(' separator='or' close=')'>file_name like #{file_name}</foreach></script>")
 	List<DocumentDO> search(Map<String,Object> params);
@@ -31,7 +37,10 @@ public interface DocumentMapper {
 	@Delete("delete from document where file_id = #{file_id}")
 	void deleteById(@Param("file_id") String id);	
 	
-	@Insert("insert into document (file_id, file_name, file_path, author) values (#{file_id}, #{file_name}, #{file_path}, #{author})")
+	@Delete("delete from document where catalog_id = #{catalog_id}")
+	void deleteByCatalogId(@Param("catalog_id") String catalog_id);		
+	
+	@Insert("insert into document (file_id, catalog_id, file_name, file_path, author) values (#{file_id}, #{catalog_id}, #{file_name}, #{file_path}, #{author})")
 	void create(DocumentDO document);	
 	
 	@Update("update document set file_name=#{file_name}, file_path=#{file_path}, author=#{author} where file_id=#{file_id}")
