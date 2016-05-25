@@ -19,7 +19,7 @@ curl -X POST --insecure -vu itosiapp:secret 'https://localhost:9999/api/oauth/to
 ```
 
 ### 接口使用说明[API](http://htmlpreview.github.com/?https://github.com/coolbeevip/itosi-microservices/blob/master/core/document-service/apidoc/index.html) 
-在本说明中 <access_token> 指的是上一步获取的access_token
+在本说明中 <access_token> 指的是上一步获取的access_token 
 
 ### 本服务使用嵌入式内存H2数据库
 
