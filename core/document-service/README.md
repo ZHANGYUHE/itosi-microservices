@@ -18,7 +18,7 @@ curl -X POST --insecure -vu itosiapp:secret 'https://localhost:9999/api/oauth/to
 {"access_token":"91202244-431f-444a-b053-7f50716f2012","token_type":"bearer","refresh_token":"e6f8624f-213d-4343-a971-980e83f734be","expires_in":1738,"scope":"read write"}
 ```
 
-### 接口使用说明[API](/apidoc/index.html) 
+### 接口使用说明[API](http://htmlpreview.github.com/?https://github.com/coolbeevip/itosi-microservices/blob/master/core/document-service/apidoc/index.html) 
 在本说明中 <access_token> 指的是上一步获取的access_token
 
 ### 本服务使用嵌入式内存H2数据库
