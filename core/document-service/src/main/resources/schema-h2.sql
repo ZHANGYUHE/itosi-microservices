@@ -39,3 +39,13 @@ create table if not exists catalog (
   author    varchar(100), --目录所有人
   opdatetime  datetime default now()
 );
+
+--收藏文档
+drop table if exists document_collect;
+create table if not exists document_collect ( 
+  collect_id varchar(32) primary key, --收藏id
+  file_id varchar(32), --文档id
+  file_state  boolean default true, --文档状态，有效/失效
+  collect_author    varchar(100), --收藏人	
+  opdatetime  datetime default now()
+);

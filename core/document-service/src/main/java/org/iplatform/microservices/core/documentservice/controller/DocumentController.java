@@ -236,7 +236,7 @@ public class DocumentController {
 	/**
 	 * @api {delete} /document/:fileid 删除文档
 	 * @apiGroup Document
-	 * @apiDescription 删除文档会同时删除这个文档的分享
+	 * @apiDescription 删除文档会同时删除这个文档的分享、并标注收藏失效
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
@@ -266,9 +266,13 @@ public class DocumentController {
 		try {
 			DocumentDO document = documentMapper.findById(fileid);
 			document.setFile_id(fileid);
+			//删除文档
 			documentMapper.deleteById(fileid);
+			//删除分享
 			documentMapper.deleteByFilePath(document.realFile_path());
-			
+			//标注收藏失效
+			documentMapper.collectLost(fileid);
+			//记录操作
 			DocumentOpLogDO documentOpLog = new DocumentOpLogDO();
 			documentOpLog.setFile_id(fileid);
 			documentOpLog.setUuid(UUID.randomUUID().toString().replaceAll("-", ""));
