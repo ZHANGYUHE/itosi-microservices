@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.iplatform.microservices.core.documentservice.bean.CountResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentListResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogDO;
+import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentSearchLogDO;
 import org.iplatform.microservices.core.documentservice.dao.DocumentMapper;
@@ -92,7 +92,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/", method = RequestMethod.POST)
+	@RequestMapping(value = "/", params="file", method = RequestMethod.POST)
 	public ResponseEntity<?> create(@RequestParam(value = "file", required = false) MultipartFile file,@RequestHeader(value="Authorization") String authorizationHeader,Principal principal) {
 
 		DocumentResponse documentrs = new DocumentResponse();
@@ -150,6 +150,13 @@ public class DocumentController {
 		headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 		headers.setContentDispositionFormData("attachment", document.getFile_name());
 		
+		//下载次数加一
+		DocumentDO updatedocument = new DocumentDO();
+		updatedocument.setDown_cnt(document.getDown_cnt()+1);
+		updatedocument.setFile_id(document.getFile_id());
+		documentMapper.update(updatedocument);
+		
+		//记录下载操作
 		DocumentOpLogDO documentOpLog = new DocumentOpLogDO();
 		documentOpLog.setFile_id(document.getFile_id());
 		documentOpLog.setUuid(UUID.randomUUID().toString().replaceAll("-", ""));
@@ -304,7 +311,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	@RequestMapping(value = "/{fileid}/", params="moveto_catalog_id", method = RequestMethod.POST)
 	public ResponseEntity<?> moveto(@PathVariable("fileid") String fileid,@RequestParam(value = "moveto_catalog_id") String moveto_catalog_id,Principal principal) {
 		DocumentResponse documentrs = new DocumentResponse();
 		try {
@@ -354,7 +361,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	@RequestMapping(value = "/{fileid}/", params="shareto_catalog_id", method = RequestMethod.POST)
 	public ResponseEntity<?> shareto(@PathVariable("fileid") String fileid,@RequestParam(value = "shareto_catalog_id") String shareto_catalog_id,Principal principal) {
 		DocumentResponse documentrs = new DocumentResponse();
 		try {
@@ -404,7 +411,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	@RequestMapping(value = "/{fileid}/", params="copyto_catalog_id", method = RequestMethod.POST)
 	public ResponseEntity<?> copyto(@PathVariable("fileid") String fileid,@RequestParam(value = "copyto_catalog_id") String copyto_catalog_id,Principal principal) {
 		DocumentResponse documentrs = new DocumentResponse();
 		try {
@@ -438,13 +445,13 @@ public class DocumentController {
 	}	
 
 	/**
-	 * @api {get} /document/ 获取我的文档列表
+	 * @api {get} /document/me 获取我的文档列表
 	 * @apiGroup Document
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
 	 * curl --insecure -i \
 	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/documentservice/api/v1/document
+	 * 	https://localhost:8000/documentservice/api/v1/document/me
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -488,7 +495,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/", method = RequestMethod.GET)
+	@RequestMapping(value = "/me", method = RequestMethod.GET)
 	public ResponseEntity<?> list(Principal principal) {
 		DocumentListResponse documentrs = new DocumentListResponse();
 		try {
@@ -503,6 +510,119 @@ public class DocumentController {
 			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
 		}	
 	}
+	
+	/**
+	 * @api {get} /document/me/count 获取我的文档数量
+	 * @apiGroup Document
+	 * @apiPermission none
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/me
+	 * 
+	 * @apiSuccessExample {json} Success-Response:
+	 * HTTP/1.1 200 OK
+	 * {
+	 *   "success": true,
+	 *   "count": 10
+	 * }
+	 * @apiErrorExample {json} Error-Response:
+	 *     HTTP/1.1 400 Bad Request
+	 *     {
+	 *       "success": false,
+	 *       "message": "错误信息"
+	 *     }
+	 */	
+	@RequestMapping(value = "/me/count", method = RequestMethod.GET)
+	public ResponseEntity<?> meCount(Principal principal) {
+		CountResponse returnObj = new CountResponse();
+		try {
+			Integer count = documentMapper.myCount(principal.getName());
+			returnObj.setCount(count);
+			return new ResponseEntity<>(returnObj, HttpStatus.OK);
+		} catch (Exception e) {
+			returnObj.setSuccess(Boolean.FALSE);
+			returnObj.setMessage(e.getMessage());
+			return new ResponseEntity<>(returnObj, HttpStatus.BAD_REQUEST);
+		}	
+	}	
+	
+	/**
+	 * @api {get} /document/me/download/count 我的文档下载量
+	 * @apiGroup Document
+	 * @apiPermission none
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/me/download/count
+	 * 
+	 * @apiSuccessExample {json} Success-Response:
+	 * HTTP/1.1 200 OK
+	 * {
+	 *   "success": true,
+	 *   "count": 10
+	 * }
+	 * @apiErrorExample {json} Error-Response:
+	 *     HTTP/1.1 400 Bad Request
+	 *     {
+	 *       "success": false,
+	 *       "message": "错误信息"
+	 *     }
+	 */	
+	@RequestMapping(value = "/me/download/count", method = RequestMethod.GET)
+	public ResponseEntity<?> meDownCount(Principal principal) {
+		CountResponse returnObj = new CountResponse();
+		try {
+			Integer count = documentMapper.myDownCount(principal.getName());
+			returnObj.setCount(count);
+			return new ResponseEntity<>(returnObj, HttpStatus.OK);
+		} catch (Exception e) {
+			returnObj.setSuccess(Boolean.FALSE);
+			returnObj.setMessage(e.getMessage());
+			return new ResponseEntity<>(returnObj, HttpStatus.BAD_REQUEST);
+		}	
+	}		
+	
+	/**
+	 * @api {get} /document/operate/?optype=:optype 最近的操作
+	 * @apiGroup Document
+	 * @apiPermission none
+	 * @apiParam {String} optype 操作类型，支持create,delete,download,info,view,share,copy,move
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i \
+	 * 	-X GET \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/operate/?optype=create,download
+	 * 
+	 * @apiSuccessExample {json} Success-Response:
+	 * HTTP/1.1 200 OK
+	 * {
+	 *   "success": true,
+	 *   "documentOpLogs": []
+	 * }
+	 * @apiErrorExample {json} Error-Response:
+	 *     HTTP/1.1 400 Bad Request
+	 *     {
+	 *       "success": false,
+	 *       "message": "错误信息"
+	 *     }
+	 */	
+	@RequestMapping(value = "/operate/",  method = RequestMethod.GET)
+	public ResponseEntity<?> operate(@RequestParam("optype") List<String> optypes, Principal principal) {
+
+		DocumentOpLogResponse returnObj = new DocumentOpLogResponse();
+		try {
+			List<DocumentOpLogDO> documentoplogs = documentMapper.myOpeaters(principal.getName(),optypes);
+			if (documentoplogs != null) {
+				returnObj.setDocumentOpLogs(documentoplogs);
+			}
+			return new ResponseEntity<>(returnObj, HttpStatus.OK);
+		} catch (Exception e) {
+			returnObj.setSuccess(Boolean.FALSE);
+			returnObj.setMessage(e.getMessage());
+			return new ResponseEntity<>(returnObj, HttpStatus.BAD_REQUEST);
+		}	
+	}	
 
 	/**
 	 * @api {get} /document/search 按文件名模糊搜索

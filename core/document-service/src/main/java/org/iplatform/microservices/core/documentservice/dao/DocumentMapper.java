@@ -22,6 +22,12 @@ public interface DocumentMapper {
 	@Select("select * from document where author=#{author}")
 	List<DocumentDO> mylistWithOutCatalog(@Param("author") String author);
 	
+	@Select("select count(1) from document where author=#{author}")
+	Integer myCount(@Param("author") String author);
+
+	@Select("select sum(down_cnt) from document where author=#{author}")
+	Integer myDownCount(@Param("author") String author);
+	
 	@Select("select * from document where author=#{author} and catalog_id is null")
 	List<DocumentDO> mylistWithRootCatalog(@Param("author") String author);	
 	
@@ -52,6 +58,9 @@ public interface DocumentMapper {
 	@Insert("insert into document_op_log (uuid, file_id, operater, optype) values (#{uuid}, #{file_id}, #{operater}, #{optype})")
 	void createoplog(DocumentOpLogDO documentoplog);	
 
+	@Select("<script>select * from document_op_log where operater=#{operater} and optype in <foreach item='item' index='index' collection='optypes' open='(' separator=',' close=')'> #{item} </foreach></script>")
+	List<DocumentOpLogDO> myOpeaters(@Param("operater") String operater,@Param("optypes") List<String> optypes);
+	
 	@Insert("insert into document_search_log (uuid, operater, searchparam) values (#{uuid}, #{operater}, #{searchparam})")
 	void createsearchlog(DocumentSearchLogDO documentsearchLog);		
 		

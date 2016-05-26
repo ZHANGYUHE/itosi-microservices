@@ -6,6 +6,7 @@ create table if not exists document (
   file_name  varchar(150),--文档名称
   file_path  varchar(500),--文档实际路径
   author    varchar(100),--拥有者
+  down_cnt bigint, --下载量
   opdatetime  datetime default now()
 );
 
