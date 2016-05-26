@@ -1,0 +1,1 @@
+insert into catalog (catalog_id,parent_catalog_id,catalog_name,isroot,author) values ('0',null,'公共文档',true,null);

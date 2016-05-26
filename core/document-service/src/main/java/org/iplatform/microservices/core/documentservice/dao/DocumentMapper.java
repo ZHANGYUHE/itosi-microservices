@@ -37,6 +37,9 @@ public interface DocumentMapper {
 	@Delete("delete from document where file_id = #{file_id}")
 	void deleteById(@Param("file_id") String id);	
 	
+	@Delete("delete from document where file_path = #{file_path}")
+	void deleteByFilePath(@Param("file_path") String file_path);		
+	
 	@Delete("delete from document where catalog_id = #{catalog_id}")
 	void deleteByCatalogId(@Param("catalog_id") String catalog_id);		
 	
@@ -52,13 +55,11 @@ public interface DocumentMapper {
 	@Insert("insert into document_search_log (uuid, operater, searchparam) values (#{uuid}, #{operater}, #{searchparam})")
 	void createsearchlog(DocumentSearchLogDO documentsearchLog);		
 		
-	/*
+	
 	@Update("<script>update document <set> "
-			+ "<if test='name != null'>name=#{name},</if> "
-			+ "<if test='age != null'>age=${age},</if> "
-			+ "<if test='place != null'>place=#{place},</if> "
+			+ "<if test='file_name != null'>file_name=#{file_name},</if> "
+			+ "<if test='catalog_id != null'>catalog_id=#{catalog_id},</if> "
 			+ "</set> "
 			+ "where file_id=${file_id}</script>")
-	int update(Document person);
-	*/	
+	int update(DocumentDO document);
 }

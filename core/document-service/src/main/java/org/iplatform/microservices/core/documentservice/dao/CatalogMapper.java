@@ -31,6 +31,9 @@ public interface CatalogMapper {
 	
 	@Select("select * from catalog where author=#{author} and isroot=1")
 	List<CatalogDO> myCatalog(@Param("author") String author);
+
+	@Select("select * from catalog where author is null and isroot=1")
+	List<CatalogDO> getPublicCatalog();
 	
 	@Select("select * from catalog where author=#{author} and parent_catalog_id=#{parent_catalog_id}")
 	List<CatalogDO> getChildCatalog(@Param("author") String author,@Param("parent_catalog_id") String parent_catalog_id);		

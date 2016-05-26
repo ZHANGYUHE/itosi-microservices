@@ -1,5 +1,6 @@
 server:
   port: 8000
+  contextPath: /documentservice
   ssl:
     enabled: true
     key-store: classpath:keystore.jks

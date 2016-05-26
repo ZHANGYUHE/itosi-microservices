@@ -6,6 +6,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +61,7 @@ public class DocumentController {
 	 * curl --insecure \
 	 * 	-H "Authorization: Bearer <access_token>" \
 	 * 	-F "file=@file.doc" \
-	 * 	https://localhost:8000/api/v1/document/
+	 * 	https://localhost:8000/documentservice/api/v1/document/
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 201 OK
@@ -72,13 +74,13 @@ public class DocumentController {
 	 *   "author": "zhanglei",
 	 *   "links": [         {
 	 *     "id": "view",
-	 *     "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
+	 *     "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
 	 *     },{
 	 *       "id": "info",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
 	 *     },{
 	 *       "id": "download",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
 	 *       }]
 	 *    }
 	 * }
@@ -98,7 +100,7 @@ public class DocumentController {
 			String fileName = file.getOriginalFilename();
 			Path path = getFileStorePath();
 
-			File targetFile = new File(path.toFile(), fileName);
+			File targetFile = new File(path.toFile(), fileName+"-"+UUID.randomUUID().toString().replaceAll("-", ""));
 			targetFile.createNewFile();
 			file.transferTo(targetFile);
 
@@ -136,7 +138,7 @@ public class DocumentController {
 	 * curl --insecure \
 	 * 	-o file.docx \
 	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download
+	 * 	https://localhost:8000/api/v1/documentservice/document/81bdcd1a28c948bb881cf3e9a31cd782/download
 	 */	
 	@RequestMapping(value = "/{fileid}/download", method = RequestMethod.GET)
 	public ResponseEntity<byte[]> download(@PathVariable("fileid") String fileid,Principal principal)
@@ -166,7 +168,7 @@ public class DocumentController {
 	 * @apiExample {curl} Example usage:
 	 * curl --insecure -i \
 	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info
+	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -179,13 +181,13 @@ public class DocumentController {
 	 *     "author": "zhanglei",
 	 *     "links": [{
 	 *       "id": "view",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
 	 *     },{
 	 *       "id": "info",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
 	 *     },{
 	 *       "id": "download",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
 	 *     }]
 	 *   }
 	 * }
@@ -222,16 +224,18 @@ public class DocumentController {
 			return new ResponseEntity(documentrs, HttpStatus.BAD_REQUEST);
 		}		
 	}
+	
 
 	/**
 	 * @api {delete} /document/:fileid 删除文档
 	 * @apiGroup Document
+	 * @apiDescription 删除文档会同时删除这个文档的分享
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
 	 * curl --insecure -i -X DELETE \
 	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782
+	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 204 NO CONTENT
@@ -253,9 +257,11 @@ public class DocumentController {
 	public ResponseEntity<?> delete(@PathVariable("fileid") String fileid,Principal principal) {
 		DocumentResponse documentrs = new DocumentResponse();
 		try {
-			DocumentDO document = new DocumentDO();
+			DocumentDO document = documentMapper.findById(fileid);
 			document.setFile_id(fileid);
 			documentMapper.deleteById(fileid);
+			documentMapper.deleteByFilePath(document.realFile_path());
+			
 			DocumentOpLogDO documentOpLog = new DocumentOpLogDO();
 			documentOpLog.setFile_id(fileid);
 			documentOpLog.setUuid(UUID.randomUUID().toString().replaceAll("-", ""));
@@ -269,8 +275,167 @@ public class DocumentController {
 			documentrs.setMessage(e.getMessage());
 			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
 		}
-		
 	}
+	
+	/**
+	 * @api {post} /document/:fileid/?moveto_catalog_id=:catalog_id 移动文档到目录
+	 * @apiGroup Document
+	 * @apiDescription 将这个文档移动到指定的目录，移动后这个文档在原有目录下消失
+	 * @apiParam {String} fileid 文档ID
+	 * @apiPermission none
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i -X POST \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/?moveto_catalog_id=:catalog_id
+	 * 
+	 * @apiSuccessExample {json} Success-Response:
+	 * HTTP/1.1 204 NO CONTENT
+	 * {
+	 *   "success": true,
+	 *   "message": null,
+	 *   "document": {
+	 *     "file_id": "81bdcd1a28c948bb881cf3e9a31cd782"
+	 *   }
+	 * }
+	 * @apiErrorExample {json} Error-Response:
+	 *     HTTP/1.1 404 Not Found
+	 *     {
+	 *       "success": false,
+	 *       "message": "错误信息"
+	 *     }
+	 */	
+	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	public ResponseEntity<?> moveto(@PathVariable("fileid") String fileid,@RequestParam(value = "moveto_catalog_id") String moveto_catalog_id,Principal principal) {
+		DocumentResponse documentrs = new DocumentResponse();
+		try {
+			DocumentDO mydocument = documentMapper.findById(fileid);
+			if(mydocument.getAuthor().equals(principal.getName())){
+				DocumentDO document = new DocumentDO();
+				document.setCatalog_id(moveto_catalog_id);
+				documentMapper.update(document);
+				documentrs.setDocument(document);
+				return new ResponseEntity<>(documentrs, HttpStatus.NO_CONTENT);				
+			}else{
+				documentrs.setSuccess(Boolean.FALSE);
+				documentrs.setMessage("不是文档的拥有者不可以移动文档");
+				return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);				
+			}
+		} catch (Exception e) {
+			documentrs.setSuccess(Boolean.FALSE);
+			documentrs.setMessage(e.getMessage());
+			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
+		}
+	}	
+	
+	/**
+	 * @api {post} /document/:fileid/?shareto_catalog_id=:catalog_id 分享文档到目录
+	 * @apiGroup Document
+	 * @apiDescription 分享这个文档的访问地址到指定目录，此文档删除后分享文档也将消失
+	 * @apiParam {String} fileid 文档ID
+	 * @apiPermission none
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i -X POST \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/?shareto_catalog_id=:catalog_id
+	 * 
+	 * @apiSuccessExample {json} Success-Response:
+	 * HTTP/1.1 204 NO CONTENT
+	 * {
+	 *   "success": true,
+	 *   "message": null,
+	 *   "document": {
+	 *     "file_id": "81bdcd1a28c948bb881cf3e9a31cd782"
+	 *   }
+	 * }
+	 * @apiErrorExample {json} Error-Response:
+	 *     HTTP/1.1 404 Not Found
+	 *     {
+	 *       "success": false,
+	 *       "message": "错误信息"
+	 *     }
+	 */	
+	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	public ResponseEntity<?> shareto(@PathVariable("fileid") String fileid,@RequestParam(value = "shareto_catalog_id") String shareto_catalog_id,Principal principal) {
+		DocumentResponse documentrs = new DocumentResponse();
+		try {
+			DocumentDO document = documentMapper.findById(fileid);
+			if(document.getAuthor().equals(principal.getName())){
+				document.setFile_id(UUID.randomUUID().toString().replaceAll("-", ""));
+				document.setCatalog_id(shareto_catalog_id);
+				documentMapper.create(document);
+				documentrs.setDocument(document);
+				return new ResponseEntity<>(documentrs, HttpStatus.NO_CONTENT);				
+			}else{
+				documentrs.setSuccess(Boolean.FALSE);
+				documentrs.setMessage("不是文档的拥有者不可以分享文档");
+				return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);				
+			}
+		} catch (Exception e) {
+			documentrs.setSuccess(Boolean.FALSE);
+			documentrs.setMessage(e.getMessage());
+			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
+		}
+	}	
+	
+	/**
+	 * @api {post} /document/:fileid/?copyto_catalog_id=:catalog_id 复制文档到目录
+	 * @apiGroup Document
+	 * @apiDescription 复制文档到指定目录，此时会产生一个文件副本，源文档的修改不会影响副本
+	 * @apiParam {String} fileid 文档ID
+	 * @apiPermission none
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i -X POST \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/?copyto_catalog_id=:catalog_id
+	 * 
+	 * @apiSuccessExample {json} Success-Response:
+	 * HTTP/1.1 204 NO CONTENT
+	 * {
+	 *   "success": true,
+	 *   "message": null,
+	 *   "document": {
+	 *     "file_id": "81bdcd1a28c948bb881cf3e9a31cd782"
+	 *   }
+	 * }
+	 * @apiErrorExample {json} Error-Response:
+	 *     HTTP/1.1 404 Not Found
+	 *     {
+	 *       "success": false,
+	 *       "message": "错误信息"
+	 *     }
+	 */	
+	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	public ResponseEntity<?> copyto(@PathVariable("fileid") String fileid,@RequestParam(value = "copyto_catalog_id") String copyto_catalog_id,Principal principal) {
+		DocumentResponse documentrs = new DocumentResponse();
+		try {
+			DocumentDO document = documentMapper.findById(fileid);
+			if(document.getAuthor().equals(principal.getName())){
+				String file_name = document.getFile_name();
+				String copy_file_name = file_name+"-"+UUID.randomUUID().toString().replaceAll("-", "");
+				Path source = Paths.get(document.realFile_path());								
+				Path target = Paths.get(source.getParent()+File.separator+copy_file_name);
+				
+				Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+				
+				document.setFile_id(UUID.randomUUID().toString().replaceAll("-", ""));
+				document.setCatalog_id(copyto_catalog_id);
+				document.setFile_path(target.toString());
+				document.setFile_name(file_name);
+				
+				documentMapper.create(document);
+				documentrs.setDocument(document);
+				return new ResponseEntity<>(documentrs, HttpStatus.NO_CONTENT);				
+			}else{
+				documentrs.setSuccess(Boolean.FALSE);
+				documentrs.setMessage("不是文档的拥有者不可以分享文档");
+				return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);				
+			}
+		} catch (Exception e) {
+			documentrs.setSuccess(Boolean.FALSE);
+			documentrs.setMessage(e.getMessage());
+			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
+		}
+	}	
 
 	/**
 	 * @api {get} /document/ 获取我的文档列表
@@ -279,7 +444,7 @@ public class DocumentController {
 	 * @apiExample {curl} Example usage:
 	 * curl --insecure -i \
 	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/api/v1/document
+	 * 	https://localhost:8000/documentservice/api/v1/document
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -292,13 +457,13 @@ public class DocumentController {
 	 *     "author": "zhanglei",
 	 *     "links": [{
 	 *       "id": "view",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
 	 *     },{
 	 *       "id": "info",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
 	 *     },{
 	 *       "id": "download",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
 	 *     }]
 	 *   },{
 	 *     "file_id": "646a2f9a7cb34151a8cdfd618aeb3018",
@@ -306,13 +471,13 @@ public class DocumentController {
 	 *     "author": "zhanglei",
 	 *     "links": [{
 	 *       "id": "view",
-	 *       "url": "/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/view"
+	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/view"
 	 *     },{
 	 *       "id": "info",
-	 *       "url": "/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/info"
+	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/info"
 	 *     },{
 	 *       "id": "download",
-	 *       "url": "/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/download"
+	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/download"
 	 *     }]
 	 *   }]
 	 * }
@@ -347,7 +512,7 @@ public class DocumentController {
 	 * @apiExample {curl} Example usage:
 	 * curl --insecure -i \
 	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/api/v1/document/search?q=亿阳+指南
+	 * 	https://localhost:8000/documentservice/api/v1/document/search?q=亿阳+指南
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
@@ -360,13 +525,13 @@ public class DocumentController {
 	 *     "author": "zhanglei",
 	 *     "links": [{
 	 *       "id": "view",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
 	 *     },{
 	 *       "id": "info",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
 	 *     },{
 	 *       "id": "download",
-	 *       "url": "/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
+	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
 	 *     }]
 	 *   },{
 	 *     "file_id": "646a2f9a7cb34151a8cdfd618aeb3018",
@@ -374,13 +539,13 @@ public class DocumentController {
 	 *     "author": "zhanglei",
 	 *     "links": [{
 	 *       "id": "view",
-	 *       "url": "/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/view"
+	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/view"
 	 *     },{
 	 *       "id": "info",
-	 *       "url": "/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/info"
+	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/info"
 	 *     },{
 	 *       "id": "download",
-	 *       "url": "/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/download"
+	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/download"
 	 *     }]
 	 *   }]
 	 * }
@@ -423,7 +588,7 @@ public class DocumentController {
 			documentrs.setMessage(e.getMessage());
 		}
 		return documentrs;
-	}
+	}	
 
 	/**
 	 * 获取文件存储跟路径
@@ -438,5 +603,12 @@ public class DocumentController {
 			path.toFile().mkdir();
 		}
 		return path;
+	}
+	
+	public static void main(String[] args){
+		Path path = Paths.get("/tmp/src/file-19.dat.COMPLETED");
+		System.out.println(path.getFileName());
+		System.out.println(path.getParent());
+		System.out.println(path.getRoot());
 	}
 }

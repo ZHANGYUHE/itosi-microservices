@@ -28,6 +28,7 @@ create table if not exists document_search_log (
   opdatetime  datetime default now()
 );
 
+--文档目录表
 drop table if exists catalog;
 create table if not exists catalog ( 
   catalog_id varchar(32) primary key, --目录id
