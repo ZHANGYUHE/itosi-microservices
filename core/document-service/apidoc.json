@@ -1,6 +1,6 @@
 {
   "name": "文档服务 REST API",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "文档服务",
   "title": "文档服务 RESTAPI",
   "url" : "https://localhost:8000/documentservice/api/v1"
