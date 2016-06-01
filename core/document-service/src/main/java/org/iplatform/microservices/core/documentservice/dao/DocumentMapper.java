@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.iplatform.microservices.core.documentservice.bean.DocumentCollectDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentSearchLogDO;
@@ -21,6 +22,12 @@ public interface DocumentMapper {
 
 	@Select("select * from document where author=#{author}")
 	List<DocumentDO> mylistWithOutCatalog(@Param("author") String author);
+	
+	@Select("select count(1) from document where author=#{author}")
+	Integer myCount(@Param("author") String author);
+
+	@Select("select sum(down_cnt) from document where author=#{author}")
+	Integer myDownCount(@Param("author") String author);
 	
 	@Select("select * from document where author=#{author} and catalog_id is null")
 	List<DocumentDO> mylistWithRootCatalog(@Param("author") String author);	
@@ -48,10 +55,19 @@ public interface DocumentMapper {
 	
 	@Update("update document set file_name=#{file_name}, file_path=#{file_path}, author=#{author} where file_id=#{file_id}")
 	int updateAll(DocumentDO document);
+	
+	@Update("update document_collect set file_state=false where file_id=#{file_id}")
+	int collectLost(@Param("file_id") String file_id);	
+	
+	@Insert("insert into document_collect (collect_id, file_id, file_state, collect_author) values (#{collect_id}, #{file_id}, ${file_state}, #{collect_author})")
+	void createCollect(DocumentCollectDO documentCollect);	
 
 	@Insert("insert into document_op_log (uuid, file_id, operater, optype) values (#{uuid}, #{file_id}, #{operater}, #{optype})")
 	void createoplog(DocumentOpLogDO documentoplog);	
 
+	@Select("<script>select * from document_op_log where operater=#{operater} and optype in <foreach item='item' index='index' collection='optypes' open='(' separator=',' close=')'> #{item} </foreach></script>")
+	List<DocumentOpLogDO> myOpeaters(@Param("operater") String operater,@Param("optypes") List<String> optypes);
+	
 	@Insert("insert into document_search_log (uuid, operater, searchparam) values (#{uuid}, #{operater}, #{searchparam})")
 	void createsearchlog(DocumentSearchLogDO documentsearchLog);		
 		

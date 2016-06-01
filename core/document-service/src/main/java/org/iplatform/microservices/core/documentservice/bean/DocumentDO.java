@@ -11,6 +11,7 @@ public class DocumentDO {
 	private String file_path;
 	private String catalog_id;
 	private Date opdatetime;
+	private Long down_cnt;
 	private List<DocumentLink> links = new ArrayList();
 
 	public Date getOpdatetime() {
@@ -19,6 +20,14 @@ public class DocumentDO {
 
 	public void setOpdatetime(Date opdatetime) {
 		this.opdatetime = opdatetime;
+	}
+
+	public Long getDown_cnt() {
+		return down_cnt;
+	}
+
+	public void setDown_cnt(Long down_cnt) {
+		this.down_cnt = down_cnt;
 	}
 
 	public String getCatalog_id() {

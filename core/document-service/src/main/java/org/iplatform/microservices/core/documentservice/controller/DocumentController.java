@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.iplatform.microservices.core.documentservice.bean.CountResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentListResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogDO;
+import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentSearchLogDO;
 import org.iplatform.microservices.core.documentservice.dao.DocumentMapper;
@@ -40,7 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author zhanglei
- * 文档管理，文档上传、下载、信息、在线预览、我的文档列表
+ * 文档的分享、移动、复制、操作查询
  */
 @RestController
 @RequestMapping("/api/v1/document")
@@ -51,7 +51,6 @@ public class DocumentController {
 
 	@Autowired
 	private DocumentServiceProperties docServiceProperties;
-
 
 	/**
 	 * @api {post} /document/ 上传文档
@@ -92,7 +91,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/", method = RequestMethod.POST)
+	@RequestMapping(value = "/", params="file", method = RequestMethod.POST)
 	public ResponseEntity<?> create(@RequestParam(value = "file", required = false) MultipartFile file,@RequestHeader(value="Authorization") String authorizationHeader,Principal principal) {
 
 		DocumentResponse documentrs = new DocumentResponse();
@@ -150,6 +149,13 @@ public class DocumentController {
 		headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 		headers.setContentDispositionFormData("attachment", document.getFile_name());
 		
+		//下载次数加一
+		DocumentDO updatedocument = new DocumentDO();
+		updatedocument.setDown_cnt(document.getDown_cnt()+1);
+		updatedocument.setFile_id(document.getFile_id());
+		documentMapper.update(updatedocument);
+		
+		//记录下载操作
 		DocumentOpLogDO documentOpLog = new DocumentOpLogDO();
 		documentOpLog.setFile_id(document.getFile_id());
 		documentOpLog.setUuid(UUID.randomUUID().toString().replaceAll("-", ""));
@@ -229,7 +235,7 @@ public class DocumentController {
 	/**
 	 * @api {delete} /document/:fileid 删除文档
 	 * @apiGroup Document
-	 * @apiDescription 删除文档会同时删除这个文档的分享
+	 * @apiDescription 删除文档会同时删除这个文档的分享、并标注收藏失效
 	 * @apiParam {String} fileid 文档ID
 	 * @apiPermission none
 	 * @apiExample {curl} Example usage:
@@ -259,9 +265,13 @@ public class DocumentController {
 		try {
 			DocumentDO document = documentMapper.findById(fileid);
 			document.setFile_id(fileid);
+			//删除文档
 			documentMapper.deleteById(fileid);
+			//删除分享
 			documentMapper.deleteByFilePath(document.realFile_path());
-			
+			//标注收藏失效
+			documentMapper.collectLost(fileid);
+			//记录操作
 			DocumentOpLogDO documentOpLog = new DocumentOpLogDO();
 			documentOpLog.setFile_id(fileid);
 			documentOpLog.setUuid(UUID.randomUUID().toString().replaceAll("-", ""));
@@ -276,56 +286,6 @@ public class DocumentController {
 			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
 		}
 	}
-	
-	/**
-	 * @api {post} /document/:fileid/?moveto_catalog_id=:catalog_id 移动文档到目录
-	 * @apiGroup Document
-	 * @apiDescription 将这个文档移动到指定的目录，移动后这个文档在原有目录下消失
-	 * @apiParam {String} fileid 文档ID
-	 * @apiPermission none
-	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i -X POST \
-	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/?moveto_catalog_id=:catalog_id
-	 * 
-	 * @apiSuccessExample {json} Success-Response:
-	 * HTTP/1.1 204 NO CONTENT
-	 * {
-	 *   "success": true,
-	 *   "message": null,
-	 *   "document": {
-	 *     "file_id": "81bdcd1a28c948bb881cf3e9a31cd782"
-	 *   }
-	 * }
-	 * @apiErrorExample {json} Error-Response:
-	 *     HTTP/1.1 404 Not Found
-	 *     {
-	 *       "success": false,
-	 *       "message": "错误信息"
-	 *     }
-	 */	
-	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
-	public ResponseEntity<?> moveto(@PathVariable("fileid") String fileid,@RequestParam(value = "moveto_catalog_id") String moveto_catalog_id,Principal principal) {
-		DocumentResponse documentrs = new DocumentResponse();
-		try {
-			DocumentDO mydocument = documentMapper.findById(fileid);
-			if(mydocument.getAuthor().equals(principal.getName())){
-				DocumentDO document = new DocumentDO();
-				document.setCatalog_id(moveto_catalog_id);
-				documentMapper.update(document);
-				documentrs.setDocument(document);
-				return new ResponseEntity<>(documentrs, HttpStatus.NO_CONTENT);				
-			}else{
-				documentrs.setSuccess(Boolean.FALSE);
-				documentrs.setMessage("不是文档的拥有者不可以移动文档");
-				return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);				
-			}
-		} catch (Exception e) {
-			documentrs.setSuccess(Boolean.FALSE);
-			documentrs.setMessage(e.getMessage());
-			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
-		}
-	}	
 	
 	/**
 	 * @api {post} /document/:fileid/?shareto_catalog_id=:catalog_id 分享文档到目录
@@ -354,7 +314,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	@RequestMapping(value = "/{fileid}/", params="shareto_catalog_id", method = RequestMethod.POST)
 	public ResponseEntity<?> shareto(@PathVariable("fileid") String fileid,@RequestParam(value = "shareto_catalog_id") String shareto_catalog_id,Principal principal) {
 		DocumentResponse documentrs = new DocumentResponse();
 		try {
@@ -368,6 +328,56 @@ public class DocumentController {
 			}else{
 				documentrs.setSuccess(Boolean.FALSE);
 				documentrs.setMessage("不是文档的拥有者不可以分享文档");
+				return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);				
+			}
+		} catch (Exception e) {
+			documentrs.setSuccess(Boolean.FALSE);
+			documentrs.setMessage(e.getMessage());
+			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
+		}
+	}	
+	
+	/**
+	 * @api {post} /document/:fileid/?moveto_catalog_id=:catalog_id 移动文档到目录
+	 * @apiGroup Document
+	 * @apiDescription 将这个文档移动到指定的目录，移动后这个文档在原有目录下消失
+	 * @apiParam {String} fileid 文档ID
+	 * @apiPermission none
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i -X POST \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/?moveto_catalog_id=:catalog_id
+	 * 
+	 * @apiSuccessExample {json} Success-Response:
+	 * HTTP/1.1 204 NO CONTENT
+	 * {
+	 *   "success": true,
+	 *   "message": null,
+	 *   "document": {
+	 *     "file_id": "81bdcd1a28c948bb881cf3e9a31cd782"
+	 *   }
+	 * }
+	 * @apiErrorExample {json} Error-Response:
+	 *     HTTP/1.1 404 Not Found
+	 *     {
+	 *       "success": false,
+	 *       "message": "错误信息"
+	 *     }
+	 */	
+	@RequestMapping(value = "/{fileid}/", params="moveto_catalog_id", method = RequestMethod.POST)
+	public ResponseEntity<?> moveto(@PathVariable("fileid") String fileid,@RequestParam(value = "moveto_catalog_id") String moveto_catalog_id,Principal principal) {
+		DocumentResponse documentrs = new DocumentResponse();
+		try {
+			DocumentDO mydocument = documentMapper.findById(fileid);
+			if(mydocument.getAuthor().equals(principal.getName())){
+				DocumentDO document = new DocumentDO();
+				document.setCatalog_id(moveto_catalog_id);
+				documentMapper.update(document);
+				documentrs.setDocument(document);
+				return new ResponseEntity<>(documentrs, HttpStatus.NO_CONTENT);				
+			}else{
+				documentrs.setSuccess(Boolean.FALSE);
+				documentrs.setMessage("不是文档的拥有者不可以移动文档");
 				return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);				
 			}
 		} catch (Exception e) {
@@ -404,7 +414,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/{fileid}/", method = RequestMethod.POST)
+	@RequestMapping(value = "/{fileid}/", params="copyto_catalog_id", method = RequestMethod.POST)
 	public ResponseEntity<?> copyto(@PathVariable("fileid") String fileid,@RequestParam(value = "copyto_catalog_id") String copyto_catalog_id,Principal principal) {
 		DocumentResponse documentrs = new DocumentResponse();
 		try {
@@ -436,50 +446,23 @@ public class DocumentController {
 			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
 		}
 	}	
-
+	
 	/**
-	 * @api {get} /document/ 获取我的文档列表
+	 * @api {get} /document/operate/?optype=:optype 最近的操作
 	 * @apiGroup Document
 	 * @apiPermission none
+	 * @apiParam {String} optype 操作类型，支持create,delete,download,info,view,share,copy,move
 	 * @apiExample {curl} Example usage:
 	 * curl --insecure -i \
+	 * 	-X GET \
 	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/documentservice/api/v1/document
+	 * 	https://localhost:8000/documentservice/api/v1/document/operate/?optype=create,download
 	 * 
 	 * @apiSuccessExample {json} Success-Response:
 	 * HTTP/1.1 200 OK
 	 * {
 	 *   "success": true,
-	 *   "message": null,
-	 *   "documents": [{
-	 *     "file_id": "81bdcd1a28c948bb881cf3e9a31cd782",
-	 *     "file_name": "文档.xlsx",
-	 *     "author": "zhanglei",
-	 *     "links": [{
-	 *       "id": "view",
-	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
-	 *     },{
-	 *       "id": "info",
-	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
-	 *     },{
-	 *       "id": "download",
-	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
-	 *     }]
-	 *   },{
-	 *     "file_id": "646a2f9a7cb34151a8cdfd618aeb3018",
-	 *     "file_name": "文档2.docx",
-	 *     "author": "zhanglei",
-	 *     "links": [{
-	 *       "id": "view",
-	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/view"
-	 *     },{
-	 *       "id": "info",
-	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/info"
-	 *     },{
-	 *       "id": "download",
-	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/download"
-	 *     }]
-	 *   }]
+	 *   "documentOpLogs": []
 	 * }
 	 * @apiErrorExample {json} Error-Response:
 	 *     HTTP/1.1 400 Bad Request
@@ -488,108 +471,23 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/", method = RequestMethod.GET)
-	public ResponseEntity<?> list(Principal principal) {
-		DocumentListResponse documentrs = new DocumentListResponse();
+	@RequestMapping(value = "/operate/",  method = RequestMethod.GET)
+	public ResponseEntity<?> operate(@RequestParam("optype") List<String> optypes, Principal principal) {
+
+		DocumentOpLogResponse returnObj = new DocumentOpLogResponse();
 		try {
-			List<DocumentDO> documents = documentMapper.mylistWithOutCatalog(principal.getName());
-			if (documents != null) {
-				documentrs.setDocuments(documents);
+			List<DocumentOpLogDO> documentoplogs = documentMapper.myOpeaters(principal.getName(),optypes);
+			if (documentoplogs != null) {
+				returnObj.setDocumentOpLogs(documentoplogs);
 			}
-			return new ResponseEntity<>(documentrs, HttpStatus.OK);
+			return new ResponseEntity<>(returnObj, HttpStatus.OK);
 		} catch (Exception e) {
-			documentrs.setSuccess(Boolean.FALSE);
-			documentrs.setMessage(e.getMessage());
-			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
+			returnObj.setSuccess(Boolean.FALSE);
+			returnObj.setMessage(e.getMessage());
+			return new ResponseEntity<>(returnObj, HttpStatus.BAD_REQUEST);
 		}	
-	}
-
-	/**
-	 * @api {get} /document/search 按文件名模糊搜索
-	 * @apiGroup Document
-	 * @apiParam {String} q 搜索条件，多个条件用加号连接，每个条件采用模糊匹配，多个条件之间采用或的关系
-	 * @apiPermission none
-	 * @apiExample {curl} Example usage:
-	 * curl --insecure -i \
-	 * 	-H "Authorization: Bearer <access_token>" \
-	 * 	https://localhost:8000/documentservice/api/v1/document/search?q=亿阳+指南
-	 * 
-	 * @apiSuccessExample {json} Success-Response:
-	 * HTTP/1.1 200 OK
-	 * {
-	 *   "success": true,
-	 *   "message": null,
-	 *   "documents": [{
-	 *     "file_id": "81bdcd1a28c948bb881cf3e9a31cd782",
-	 *     "file_name": "亿阳企业文化.xlsx",
-	 *     "author": "zhanglei",
-	 *     "links": [{
-	 *       "id": "view",
-	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/view"
-	 *     },{
-	 *       "id": "info",
-	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/info"
-	 *     },{
-	 *       "id": "download",
-	 *       "url": "/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/download"
-	 *     }]
-	 *   },{
-	 *     "file_id": "646a2f9a7cb34151a8cdfd618aeb3018",
-	 *     "file_name": "开发指南.docx",
-	 *     "author": "zhanglei",
-	 *     "links": [{
-	 *       "id": "view",
-	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/view"
-	 *     },{
-	 *       "id": "info",
-	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/info"
-	 *     },{
-	 *       "id": "download",
-	 *       "url": "/documentservice/api/v1/document/646a2f9a7cb34151a8cdfd618aeb3018/download"
-	 *     }]
-	 *   }]
-	 * }
-	 * @apiErrorExample {json} Error-Response:
-	 *     HTTP/1.1 400 Bad Request
-	 *     {
-	 *       "success": false,
-	 *       "message": "错误信息"
-	 *     }
-	 */		
-	@RequestMapping(value = "/search", method = RequestMethod.GET)
-	public DocumentListResponse search(@RequestParam("q") String q,Principal principal) {
-		DocumentListResponse documentrs = new DocumentListResponse();
-		try {
-			if(q!=null && q.trim().length()>0){
-				String[] file_names = q.split(" ");
-				int index=0;
-				for(String file_name : file_names){
-					file_names[index++] = "%"+file_name+"%";
-				}
-				Map<String,Object> params = new HashMap();
-				params.put("author", principal.getName());
-				params.put("file_names",file_names);
-				List<DocumentDO> documents = documentMapper.search(params);
-				if (documents != null) {
-					documentrs.setDocuments(documents);
-				}	
-				
-				DocumentSearchLogDO documentSearchLog = new DocumentSearchLogDO();
-				documentSearchLog.setUuid(UUID.randomUUID().toString().replaceAll("-", ""));
-				documentSearchLog.setOperater(principal.getName());
-				documentSearchLog.setSearchparam(q);			
-				documentMapper.createsearchlog(documentSearchLog);
-			}else{
-				documentrs.setSuccess(Boolean.FALSE);
-				documentrs.setMessage("查询参数不能为空");
-			}
-		} catch (Exception e) {
-			documentrs.setSuccess(Boolean.FALSE);
-			documentrs.setMessage(e.getMessage());
-		}
-		return documentrs;
 	}	
-
+	
 	/**
 	 * 获取文件存储跟路径
 	 * 
@@ -603,12 +501,5 @@ public class DocumentController {
 			path.toFile().mkdir();
 		}
 		return path;
-	}
-	
-	public static void main(String[] args){
-		Path path = Paths.get("/tmp/src/file-19.dat.COMPLETED");
-		System.out.println(path.getFileName());
-		System.out.println(path.getParent());
-		System.out.println(path.getRoot());
-	}
+	}	
 }
