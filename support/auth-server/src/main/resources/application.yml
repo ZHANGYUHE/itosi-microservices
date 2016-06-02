@@ -36,4 +36,4 @@ authentication:
   oauth:
     clientid: itosiapp
     secret: secret
-    tokenValidityInSeconds: 3600
+    tokenValidityInSeconds: 86400
