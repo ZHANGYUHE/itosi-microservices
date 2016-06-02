@@ -22,7 +22,16 @@ spring:
     show_sql: true
     generate-ddl: false
     hibernate.ddl-auto: none
-
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    metadataMap:
+      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
 authentication:
   oauth:
     clientid: itosiapp
