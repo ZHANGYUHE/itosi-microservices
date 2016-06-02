@@ -7,7 +7,7 @@ info:
     
 spring:
   application:
-    name: 认证服务
+    name: auth-service
       
 logging.level.root: WARN
 logging.level.org.springframework.security.oauth2: DEBUG

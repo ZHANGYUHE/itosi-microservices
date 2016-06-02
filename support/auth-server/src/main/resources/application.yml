@@ -22,7 +22,10 @@ spring:
     show_sql: true
     generate-ddl: false
     hibernate.ddl-auto: none
-
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
 authentication:
   oauth:
     clientid: itosiapp
