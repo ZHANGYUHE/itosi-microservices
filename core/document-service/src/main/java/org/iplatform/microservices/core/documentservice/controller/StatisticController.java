@@ -1,42 +1,20 @@
 package org.iplatform.microservices.core.documentservice.controller;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.iplatform.microservices.core.documentservice.bean.CountResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentListResponse;
-import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogDO;
-import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogResponse;
-import org.iplatform.microservices.core.documentservice.bean.DocumentResponse;
-import org.iplatform.microservices.core.documentservice.bean.DocumentSearchLogDO;
 import org.iplatform.microservices.core.documentservice.dao.DocumentMapper;
 import org.iplatform.microservices.core.documentservice.properties.DocumentServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * @author zhanglei
@@ -195,5 +173,29 @@ public class StatisticController {
 	 * @api {post} /document/star 热门资源(?)
 	 * @apiGroup Statistic
 	 * @apiDescription 文档评级最高的资源
-	 */		
+	 */	
+	
+	/**
+	 * @api {post} /document/history 浏览历史(?)
+	 * @apiGroup Statistic
+	 * @apiDescription 用户的浏览资源记录
+	 * @apiParam {String} userid 用户ID
+	 */	
+	
+	
+	/**
+	 * @api {post} /document/approve 我的审批(?)
+	 * @apiGroup Statistic
+	 * @apiDescription 用户的审批记录
+	 * @apiParam {String} userid 用户ID
+	 */
+	
+	
+	/**
+	 * @api {post} /document/:{fileid}/myContributions 我的贡献(?)
+	 * @apiGroup Statistic
+	 * @apiDescription 贡献排行（上传知识最多的排名前5位用户)
+	 * @apiParam {String} userid 用户ID
+	 */
+	
 }

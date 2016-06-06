@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.Principal;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +18,11 @@ import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.iplatform.microservices.core.documentservice.bean.CatalogDO;
+import org.iplatform.microservices.core.documentservice.bean.CatalogResponse;
 import org.iplatform.microservices.core.documentservice.bean.CountResponse;
+import org.iplatform.microservices.core.documentservice.bean.DocumentCollectDO;
+import org.iplatform.microservices.core.documentservice.bean.DocumentCollectResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentDO;
 import org.iplatform.microservices.core.documentservice.bean.DocumentListResponse;
 import org.iplatform.microservices.core.documentservice.bean.DocumentOpLogDO;
@@ -58,6 +64,33 @@ public class CollectController {
 	 * @apiDescription 收藏这个文档
 	 * @apiParam {String} fileid 文档ID
 	 */	
+	
+	@RequestMapping(value = "/{fileid}/collect", method = RequestMethod.POST)
+	public ResponseEntity<?> createCollect(@RequestParam(value="ispublic",defaultValue="false") Boolean ispublic,
+			@RequestHeader(value = "Authorization") String authorizationHeader,
+			@RequestParam("fileid") String fileid,
+			Principal principal) {
+		DocumentCollectResponse documentlogrs = new DocumentCollectResponse();
+		try {
+			DocumentCollectDO document = new DocumentCollectDO();
+			if (!ispublic) {
+				document.setCollect_author(principal.getName());
+			}
+			document.setFile_id(fileid);
+			document.setFile_state(true);
+			document.setCollect_id(UUID.randomUUID().toString().replaceAll("-", ""));
+			documentMapper.createCollect(document);
+			documentlogrs.setDocument(document);
+			return new ResponseEntity<>(documentlogrs, HttpStatus.CREATED);
+		} catch (Exception e) {
+			documentlogrs.setSuccess(Boolean.FALSE);
+			documentlogrs.setMessage(e.getMessage());
+			logger.error("", e);
+			return new ResponseEntity<>(documentlogrs, HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	
 	
 	/**
 	 * @api {get} /document/me/collect 我的收藏(?)
