@@ -6,7 +6,7 @@ info:
     version: 1.0
 spring:
   application:
-    name: 服务管理
+    name: admin-dashboard
 endpoints:
   health:
     sensitive: false
