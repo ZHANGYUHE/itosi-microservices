@@ -1,13 +1,14 @@
-package org.iplatform.microservices.support.authserver.controller;
+package org.iplatform.microservices.core.documentservice.ui.controller;
 
 import java.nio.charset.Charset;
 
 import org.apache.commons.codec.binary.Base64;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.iplatform.microservices.support.authserver.bean.AuthServiceToken;
+import org.iplatform.microservices.core.documentservice.bean.AuthServiceToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -17,37 +18,25 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
 @Controller
-public class HelloWorldController {
+public class WebIndexController {
 
 	@Autowired
 	private RestOperations restTemplate;
-	private static final Logger LOG = LoggerFactory.getLogger(HelloWorldController.class);
+	
+	private static final Logger LOG = LoggerFactory.getLogger(WebIndexController.class);
 	ObjectMapper objectMapper = new ObjectMapper();
 
-	@ResponseBody
-	@RequestMapping("/hello")
-	public String sayHello() {
-		return "Hello User!";
-	}
-
-	@RequestMapping("/")
-	public String register(ModelMap map) throws Exception {		
-		return "login";
-	}
-	
-	@RequestMapping(value="/login", method = RequestMethod.POST)
-	public String login(@RequestParam(value = "username") String username,@RequestParam(value = "password") String password,ModelMap map) throws Exception {
+	@RequestMapping("/login")
+	public String index(ModelMap map) throws Exception {
 		try {
 			//此处通过用户名密码获取access_token然后返回页面
-			String url = "https://localhost:9999/api/oauth/token?username="+username+"&password="+password+"&grant_type=password";
+			String url = "https://localhost:9999/api/oauth/token?username=admin&password=admin&grant_type=password";
 			MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
 			String auth = "itosiapp:secret";
 			byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("US-ASCII")));
@@ -68,5 +57,5 @@ public class HelloWorldController {
 	@Bean
 	public RestTemplate restTemplate() {
 		return new RestTemplate();
-	}	
+	}
 }

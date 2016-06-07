@@ -91,7 +91,7 @@ public class DocumentController {
 	 *       "message": "错误信息"
 	 *     }
 	 */	
-	@RequestMapping(value = "/", params="file", method = RequestMethod.POST)
+	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public ResponseEntity<?> create(@RequestParam(value = "file", required = false) MultipartFile file,@RequestHeader(value="Authorization") String authorizationHeader,Principal principal) {
 
 		DocumentResponse documentrs = new DocumentResponse();

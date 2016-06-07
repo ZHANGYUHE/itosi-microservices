@@ -7,6 +7,6 @@ info:
     
 spring:
   application:
-    name: 服务发现 
+    name: discovery-server 
       
       
