@@ -1,10 +1,18 @@
----
 server:
   port: 8761
+  ssl:
+    enabled: false
+    key-store: classpath:keystore.jks
+    key-store-password: bocobomc
+    key-password: bocobomc
+    keyAlias: itosi
+    trust-store: classpath:keystore.jks
+    trust-store-password: bocobomc
+    trust-store-type: jks  
 spring:
   boot:
     admin:
-      url: http://localhost:8762
+      url: http://localhost:8762      
 eureka:
   instance:
     hostname: localhost
@@ -12,4 +20,4 @@ eureka:
     registerWithEureka: false
     fetchRegistry: false
     serviceUrl:
-      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/         
+      defaultZone: https://${eureka.instance.hostname}:${server.port}/eureka/         
