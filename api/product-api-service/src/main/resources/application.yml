@@ -1,0 +1,32 @@
+server:
+  port: 8088
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.jks
+    key-store-password: bocobomc
+    key-password: bocobomc
+    keyAlias: itosi
+    trust-store: classpath:keystore.jks
+    trust-store-password: bocobomc
+    trust-store-type: jks
+    
+security:
+  oauth2:
+    resource:
+      userInfoUri: https://localhost:9999/api/user
+    
+eureka:
+  instance:
+    nonSecurePortEnabled: false
+    securePortEnabled: true  
+    securePort: 8088  
+    homePageUrl: https://localhost:${server.port}/
+    statusPageUrl: https://localhost:${server.port}/info
+    preferIpAddress: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/   
+ribbon:
+  eureka:
+    enabled: true        
+      

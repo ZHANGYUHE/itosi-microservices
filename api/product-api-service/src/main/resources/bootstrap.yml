@@ -1,0 +1,11 @@
+info:
+  app:
+    name: Product API Service
+    description: 对外接口服务
+    version: 1.0
+spring:
+  application:
+    name: productapi
+  cloud:
+    config:
+      uri: http://localhost:8888         
