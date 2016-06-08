@@ -17,11 +17,25 @@
    <div class="container">
       <form class="form-signin" action="/api/login" method="post">
         <h2 class="form-signin-heading">登录</h2>
-        <label for="inputUsername" class="sr-only">用户名</label>
-        <input type="email" name="username" class="form-control" placeholder="用户名" required="true"></input>
-        <label for="inputPassword" class="sr-only">Password</label>
-        <input type="password" name="password" class="form-control" placeholder="密码" required="true"></input>
-        <button class="btn btn-lg btn-primary btn-block" type="submit">确定</button>
+        <div class="form-group">
+        	<label for="inputUsername" class="sr-only">用户名</label>
+        	<input type="email" id="inputUsername" name="username" class="form-control" placeholder="用户名" required="true"></input>
+        </div>
+		<div class="form-group">
+	        <label for="inputPassword" class="sr-only">Password</label>
+	        <input type="password" name="password" class="form-control" placeholder="密码" required="true"></input>
+        </div>
+        <div id="verify-group" class="form-group has-error">
+        	<div style="float:left;width:180px;padding-right: 10px;">
+      			<input id="verify-input" type="text" name="captcha" class="form-control span2" placeholder="验证码" required="true"></input>
+      		</div>
+      		<img id="verify-img" width="120" height="44px" src="/api/captcha" />
+    	</div>
+    	<div class="form-group">
+    		<div th:text="${message}" class="alert alert-danger">错误信息</div>
+    	</div>
+    	
+    	<button class="btn btn-lg btn-primary btn-block" disabled="disabled" type="submit">确定</button> 
       </form>
     </div> <!-- /container -->
 	<!-- js -->
@@ -33,7 +47,34 @@
 
 	<script th:inline="javascript">
 		$(function() {
-							
+			//验证码输入框校验 
+			$('#verify-input').keyup(function(){
+				$.ajax({
+		             type: "GET",
+		             url: "/api/captcha/check?",
+		             data: "code="+$(this).val(),		             
+		             success: function(data){
+		            	 if(data=='yes'){
+			             	 $('#verify-group').removeClass('has-error');
+			             	 $('#verify-group').addClass('has-success');
+			             	 $('button[type="submit"]').prop('disabled', false);
+		            	 }else{
+			             	 $('#verify-group').removeClass('has-success');
+			             	 $('#verify-group').addClass('has-error');	
+			             	 $('button[type="submit"]').prop('disabled', true);
+		            	 }
+		             }
+		         });
+			});
+			
+			//单击验证码图片重新生成 
+			$('#verify-img').click(function () { 
+			     $(this).hide().attr('src', '/api/captcha?' + Math.floor(Math.random()*100) ).fadeIn(); 
+			     $('#verify-input').val('');
+			     $('#verify-group').removeClass('has-success');
+             	 $('#verify-group').addClass('has-error');	
+			     $('button[type="submit"]').prop('disabled', true);
+			});							
 		});
 	</script>
 </body>

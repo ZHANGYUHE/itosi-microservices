@@ -35,7 +35,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	public void configure(WebSecurity web) throws Exception {
 
 		web.ignoring().antMatchers("/h2console/**").antMatchers("/api/register").antMatchers("/api/login")
-				.antMatchers("/api/lostpassword").antMatchers("/api/resetpassword").antMatchers("/api/hello");
+				.antMatchers("/api/lostpassword").antMatchers("/api/resetpassword").antMatchers("/api/hello")
+				.antMatchers("/api/captcha/**");
 
 	}
 

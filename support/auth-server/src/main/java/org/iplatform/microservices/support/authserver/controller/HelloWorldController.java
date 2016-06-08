@@ -2,6 +2,8 @@ package org.iplatform.microservices.support.authserver.controller;
 
 import java.nio.charset.Charset;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.codec.binary.Base64;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.iplatform.microservices.support.authserver.bean.AuthServiceToken;
@@ -44,21 +46,33 @@ public class HelloWorldController {
 	}
 	
 	@RequestMapping(value="/login", method = RequestMethod.POST)
-	public String login(@RequestParam(value = "username") String username,@RequestParam(value = "password") String password,ModelMap map) throws Exception {
+	public String login(@RequestParam(value = "username") String username,@RequestParam(value = "password") String password,@RequestParam(value = "captcha") String captcha,ModelMap map,HttpServletRequest request) throws Exception {
 		try {
-			//此处通过用户名密码获取access_token然后返回页面
-			String url = "https://localhost:9999/api/oauth/token?username="+username+"&password="+password+"&grant_type=password";
-			MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-			String auth = "itosiapp:secret";
-			byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("US-ASCII")));
-			headers.add("Authorization", "Basic " + new String(encodedAuth));
-			ResponseEntity<String> result = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity(null, headers),
-					String.class);
-			if (result.getStatusCode() == HttpStatus.OK) {
-				AuthServiceToken token = objectMapper.readValue(result.getBody(), AuthServiceToken.class);
-				map.addAttribute("access_token", token.access_token);
+			String kaptchaExpected = (String)request.getSession().getAttribute("verify");
+			if(kaptchaExpected.equals(captcha)){
+				try{
+					//此处通过用户名密码获取access_token然后返回页面
+					String url = "https://localhost:9999/api/oauth/token?username="+username+"&password="+password+"&grant_type=password";
+					MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+					String auth = "itosiapp:secret";
+					byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("US-ASCII")));
+					headers.add("Authorization", "Basic " + new String(encodedAuth));
+					ResponseEntity<String> result = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity(null, headers),
+							String.class);
+					if (result.getStatusCode() == HttpStatus.OK) {
+						AuthServiceToken token = objectMapper.readValue(result.getBody(), AuthServiceToken.class);
+						map.addAttribute("access_token", token.access_token);
+					}		
+					return "index";
+				} catch (Exception e) {
+					map.addAttribute("message", "验证码无效或者用户名密码错误");	
+					return "login";
+				}				
+			}else{
+				map.addAttribute("message", "验证码无效或者用户名密码错误");
+				return "login";
 			}
-			return "index";
+			
 		} catch (Exception e) {
 			LOG.error("", e);
 			throw new Exception(e);
