@@ -1,11 +1,11 @@
 info:
   app:
-    name: 文档服务
+    name: Document Service
     description: 提供文档的上传、下载、搜索、在线阅读
     version: 1.0
 spring:
   application:
-    name: 文档服务
+    name: document-service
 endpoints:
   health:
     sensitive: false

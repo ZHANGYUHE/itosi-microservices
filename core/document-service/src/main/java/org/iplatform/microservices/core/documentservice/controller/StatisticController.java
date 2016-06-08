@@ -186,7 +186,7 @@ public class StatisticController {
 	/**
 	 * @api {post} /document/approve 我的审批(?)
 	 * @apiGroup Statistic
-	 * @apiDescription 用户的审批记录
+	 * @apiDescription 角色是室主任的系统用户的审批记录
 	 * @apiParam {String} userid 用户ID
 	 */
 	

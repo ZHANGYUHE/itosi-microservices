@@ -34,7 +34,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 
-		web.ignoring().antMatchers("/h2console/**").antMatchers("/api/register").antMatchers("/api/activate")
+		web.ignoring().antMatchers("/h2console/**").antMatchers("/api/register").antMatchers("/api/login")
 				.antMatchers("/api/lostpassword").antMatchers("/api/resetpassword").antMatchers("/api/hello");
 
 	}
@@ -44,14 +44,4 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	public AuthenticationManager authenticationManagerBean() throws Exception {
 		return super.authenticationManagerBean();
 	}
-
-//	@EnableGlobalMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
-//	private static class GlobalSecurityConfiguration extends GlobalMethodSecurityConfiguration {
-//		@Override
-//		protected MethodSecurityExpressionHandler createExpressionHandler() {
-//			return new OAuth2MethodSecurityExpressionHandler();
-//		}
-//
-//	}
-
 }

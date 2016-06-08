@@ -2,11 +2,14 @@ server:
   port: 9999
   contextPath: /api
   ssl:
-    enabled: true 
+    enabled: true
     key-store: classpath:keystore.jks
     key-store-password: bocobomc
     key-password: bocobomc
     keyAlias: itosi
+    trust-store: classpath:keystore.jks
+    trust-store-password: bocobomc
+    trust-store-type: jks
 spring:
   datasource:
     dataSourceClassName: org.h2.jdbcx.JdbcDataSource
@@ -22,9 +25,18 @@ spring:
     show_sql: true
     generate-ddl: false
     hibernate.ddl-auto: none
-
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    metadataMap:
+      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
 authentication:
   oauth:
     clientid: itosiapp
     secret: secret
-    tokenValidityInSeconds: 3600
+    tokenValidityInSeconds: 86400
