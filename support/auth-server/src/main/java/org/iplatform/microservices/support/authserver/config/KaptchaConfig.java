@@ -1,5 +1,6 @@
 package org.iplatform.microservices.support.authserver.config;
 
+import java.awt.Color;
 import java.util.Properties;
 
 import org.springframework.context.annotation.Bean;
@@ -56,6 +57,8 @@ public class KaptchaConfig {
 		properties.put("kaptcha.image.height", 60);
 		properties.put("kaptcha.textproducer.char.string","abcde2345678gfynmnpwx");
 		properties.put("kaptcha.textproducer.char.length",5);
+		properties.put("kaptcha.textproducer.font.color",Color.RED);		
+		
 		return properties;
 	}
 }
