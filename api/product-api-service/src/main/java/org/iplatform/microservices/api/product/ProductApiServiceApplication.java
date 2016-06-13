@@ -1,17 +1,5 @@
 package org.iplatform.microservices.api.product;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class ProductApiServiceApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(ProductApiServiceApplication.class, args);
-	}
-}
-package org.iplatform.microservices.api.product;
-
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;

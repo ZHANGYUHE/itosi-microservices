@@ -1,4 +1,5 @@
 <configuration>
+	<property name="LOG_FILE" value="./logs/discovery-server.log"/> 
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <jmxConfigurator/>
 </configuration>
