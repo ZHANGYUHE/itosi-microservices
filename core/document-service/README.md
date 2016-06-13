@@ -5,6 +5,11 @@
 * 文档信息查看
 * 文档在线预览
 
+
+# 启动
+java -Djavax.net.ssl.trustStore=keystore.jks -Djavax.net.ssl.trustStorePassword=bocobomc -jar document-service-0.0.1-SNAPSHOT.jar
+
+
 # 使用
 
 ### 从AuthServer获取 access_token
