@@ -136,5 +136,12 @@ public class SearchController {
 			documentrs.setMessage(e.getMessage());
 		}
 		return documentrs;
-	}	
+	}
+	
+	/**
+	 * @api {get} /document/documentSearch/:type/:content 文档检索(?)
+	 * @apiGroup Search
+	 * @apiParam {String} type 检索类型（“知识文档名称”、“知识文档关键字”和“知识文档类型”）
+	 * @apiParam {String} content 检索内容
+	 */
 }

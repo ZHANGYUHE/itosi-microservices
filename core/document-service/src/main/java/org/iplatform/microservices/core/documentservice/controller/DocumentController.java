@@ -501,5 +501,13 @@ public class DocumentController {
 			path.toFile().mkdir();
 		}
 		return path;
-	}	
+	}
+	
+	/**
+	 * @api {PUT} /document/modify/:fileid 修改文档(?)
+	 * @apiGroup Document
+	 * @apiDescription 修改文档信息
+	 */
+	
+	
 }

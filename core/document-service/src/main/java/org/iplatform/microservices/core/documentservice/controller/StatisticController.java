@@ -191,11 +191,17 @@ public class StatisticController {
 	 */
 	
 	
+	
 	/**
-	 * @api {post} /document/:{fileid}/myContributions 我的贡献(?)
+	 * @api {post} /document/:{userid}/myContributions 我的贡献(?)
 	 * @apiGroup Statistic
-	 * @apiDescription 贡献排行（上传知识最多的排名前5位用户)
+	 * @apiDescription 展示登录用户的已发布文档、未通过文档和提交中的文档信息
 	 * @apiParam {String} userid 用户ID
+	 * @apiExample {curl} Example usage:
+	 * curl --insecure -i \
+	 * 	-H "Authorization: Bearer <access_token>" \
+	 * 	https://localhost:8000/documentservice/api/v1/document/81bdcd1a28c948bb881cf3e9a31cd782/myContributions
+	 * 
 	 */
 	
 }
