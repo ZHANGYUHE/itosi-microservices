@@ -125,7 +125,6 @@ public class DocumentController {
 			logger.error("",e);
 			return new ResponseEntity<>(documentrs, HttpStatus.BAD_REQUEST);
 		}
-		
 	}
 
 	/**
